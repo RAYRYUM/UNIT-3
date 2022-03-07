@@ -1,0 +1,20 @@
+--nagisa
+select city from crime_scene_report where description like '%murder%';
+--reiji
+select count(car_model) from drivers_license where car_model like 'Mercedez Benz';
+--elia
+select count(type) from crime_scene_report where type like '%theft%' or '%robbery%' and city like 'SQL';
+--koji
+select count(date) from facebook_event_checkin where date like '201707%';
+--david
+select annual_income from income where ssn like;
+select ssn from person where id like ssn like;
+select id from get_fit_now_member where membership_status like 'gold';
+--anjuu
+select count(description) from crime_scene_report where description like '%night%';
+--bee
+idk
+-- last one
+select count(description) from crime_scene_report where description like '%naked%' or '%nude%' or '%nudist%';
+-- micheal
+select date,count(date) from crime_scene_report;
