@@ -69,3 +69,412 @@ For loops
 KivyMD Library - UI/GUI building
 SQLite - database building
 Datetime
+
+Python code :
+```.p
+
+Window.size = (500, 500)
+
+pwd_context = CryptContext(
+    schemes=["pbkdf2_sha256"],
+    default = 'pbkdf2_sha256',
+    pbkdf2_sha256__default_rounds=3000)
+
+class login(MDApp):
+    def build(self):
+        return
+
+def encrypt_password(password):
+    return pwd_context.hash(password)
+# function to check if a password is correct
+
+def check_password(password, hashed):
+    return pwd_context.verify(password, hashed)
+
+class database:
+
+    def __init__(self, name):
+        self.name = name
+        self.connection = sqlite3.connect(self.name)
+        self.cursor = self.connection.cursor()
+
+    def close(self):
+        self.connection.close()
+
+    def create(self):
+        self.cursor.execute("""CREATE TABLE if not exists Users(
+            id INTEGER primary key,
+            username VARCHAR(200) not null,
+            password VARCHAR(256) not null
+        );
+        """)
+        print("dekita")
+        self.cursor.execute("""
+        CREATE TABLE if not exists Spending(
+            date INTEGER not null,
+            amount INTEGER not null,
+            currency VARCHAR(250) not null,
+            location VARCHAR(250),
+            activity VARCHAR(250),
+            type VARCHAR (250)
+        );
+        """)
+        self.cursor.execute("""
+        CREATE TABLE if not exists Income(
+            date INTEGER not null,
+            amount INTEGER not null,
+            currency VARCHAR(250) not null,
+            location VARCHAR(250),
+            reason VARCHAR(250),
+            type VARCHAR (250)
+        );
+        """)
+
+        self.cursor.execute("""
+        CREATE TABLE if not exists Total(
+            current_balace INTEGER,
+            total_spending INTEGER,
+            total_income INTEGER
+        );
+        """)
+        self.connection.commit()
+
+    def create_new_spending_input(self, date, amount, currency, location, activity, type):
+        print(date,amount)
+        self.cursor.execute("INSERT into Spending values (?,?,?,?,?,?)",(date,amount,currency,location,activity,type))
+        self.connection.commit()
+
+    def create_new_income_input(self, date, amount, currency, location, reason, type):
+        self.cursor.execute(
+            f"INSERT into Spending values('{date}','{location}','{amount}','{currency}','{reason}','{type}');")
+        self.connection.commit()
+
+    def create_new_user(self, username, password):
+        print(username, password)
+        self.cursor.execute("INSERT into Users values(?,?,?)",(random.randint(1, 1000000), username, encrypt_password(password)))
+        self.connection.commit()
+
+#class HomePage(MDScreen):
+
+    #def go_to_LoginApp(self):
+    #    self.parent.current = "LoginApp"
+    #def go_to_RegisterScreen(self):
+    #    self.parent.current="RegisterScreen"
+
+class MenuPage(MDScreen):
+
+    def go_to_SpendingEntry(self):
+        self.parent.current="SpendingEntry"
+
+    def go_to_IncomeEntry(self):
+        self.parent.current="IncomeEntry"
+
+    pass
+
+class LoginApp(MDScreen):
+    dialog = None
+
+    #def build(self):
+    #    self.theme_cls.theme_style = "Light"
+    #    self.theme_cls.primary_palette = "BlueGray"
+    #    return Builder.load_file('login.kv')
+
+
+    def login(self):
+        # user and pass check
+        print("logging in")
+        input_user = self.ids.user.text
+        input_password = self.ids.password.text
+        print(input_user,input_password)
+        db = database("register.db")
+        user=db.query_Users(username=input_user)
+        if user:
+            id,username,hashed_pwd = input_user
+            if check_password(password=input_password, hashed= hashed_pwd):
+                    self.dialog = MDDialog(
+                        title="Log in",
+                        text=f"Welcome {self.root.ids.user.text}!",
+                        buttons=[
+                            MDFlatButton(
+                                text="OK", on_release=self.closed
+                            )
+                        ]
+                    )
+
+            else :
+                # failed login
+                self.dialog = MDDialog(
+                    title="Log in failed",
+                    text=f"die {self.root.ids.user.text}!",
+                    buttons=[
+                        MDFlatButton(
+                            text="OK", on_release=self.closed
+                        )
+                    ]
+                )
+                self.dialog.open()
+
+
+
+    def closed(self, instance):
+        self.dialog.dismiss()
+
+    def go_to_RegisterScreen(self):
+       self.parent.current="RegisterScreen"
+
+    def go_to_LoginApp(self):
+        self.parent.current="LoginApp"
+
+    def go_to_MenuPage(self):
+        self.parent.current="MenuPage"
+
+
+class RegisterScreen(MDScreen):
+    dialog = None
+
+    #def build(self):
+     #3  self.theme_cls.primary_palette = "BlueGray"
+       # return Builder.load_file('login.kv')
+
+    def register(self):
+        print("I gave up -Anju")
+        username_i = self.ids.signup_username.text
+        password_i = self.ids.signup_password.text
+        #print(username_i, password_i)
+        db = database("register.db")
+        db.create_new_user(username=username_i, password=password_i)
+        db.close()
+
+    def go_to_RegisterScreen(self):
+        self.parent.current = "RegisterScreen"
+
+    def go_to_LoginApp(self):
+        self.parent.current = "LoginApp"
+
+    def go_to_MenuPage(self):
+        self.parent.current="MenuPage"
+
+
+class SpendingEntry(MDScreen):
+
+    def go_to_MenuPage(self):
+        self.parent.current = "MenuPage"
+
+class IncomeEntry(MDScreen):
+
+    def go_to_MenuPage(self):
+        self.parent.current = "MenuPage"
+
+
+db=database("register.db")
+db.create()
+db.close()
+
+m=login()
+m.run()
+```
+Kivy code:
+```.p
+ScreenManager:
+    id: screen_manager
+
+    LoginApp:
+        id: loginscreen
+        name :"LoginApp"
+
+    RegisterScreen:
+        id: RegisterScreen
+        name:"RegisterScreen"
+
+    MenuPage:
+        id:MenuPage
+        name:"MenuPage"
+
+    SpendingEntry:
+        id:SpendingEntry
+        name:"SpendingEntry"
+
+    IncomeEntry:
+        id:IncomeEntry
+        name:"IncomeEntry"
+
+<LoginApp>
+    MDCard:
+        size_hint: None, None
+        size: 300, 400
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: 25
+        spacing: 25
+        orientation: 'vertical'
+
+        MDLabel:
+            id: welcome_label
+            text: "WELCOME"
+            font_size: 40
+            halign: 'center'
+            size_hint_y: None
+            height: self.texture_size[1]
+            padding_y: 15
+
+        MDTextFieldRound:
+            id: user
+            hint_text: "username"
+            icon_right: "account"
+            size_hint_x: None
+            width: 200
+            font_size: 18
+            pos_hint: {"center_x": 0.5}
+
+        MDTextFieldRound:
+            id: password
+            hint_text: "password"
+            icon_right: "eye-off"
+            size_hint_x: None
+            width: 200
+            font_size: 18
+            pos_hint: {"center_x": 0.5}
+            password: True
+
+        MDRoundFlatButton:
+            text: "LOG IN"
+            font_size: 12
+            pos_hint: {"center_x": 0.5}
+            on_press: root.login()
+
+        MDRoundFlatButton:
+            text: "SIGN UP"
+            font_size: 12
+            pos_hint: {"center_x": 0.5}
+            on_press: root.go_to_RegisterScreen()
+
+        MDRoundFlatButton:
+            text: "USE AS GUEST"
+            font_size: 12
+            pos_hint: {"center_x": 0.5}
+            on_press: root.go_to_MenuPage()
+
+        #MDRoundFlatButton:
+            #text: "CLEAR"
+            #font_size: 12
+            #pos_hint: {"center_x": 0.5}
+            #on_press: app.clear()
+
+        Widget:
+            size_hint_y: None
+            height: 10
+
+<RegisterScreen>
+    MDCard:
+        size_hint: None, None
+        size: 300, 400
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: 25
+        spacing: 25
+        orientation: 'vertical'
+
+        MDLabel:
+            id: welcome_label
+            text: "WELCOME"
+            font_size: 40
+            halign: 'center'
+            size_hint_y: None
+            height: self.texture_size[1]
+            padding_y: 15
+
+        MDTextFieldRound:
+            id: signup_username
+            hint_text: "username"
+            icon_right: "account"
+            size_hint_x: None
+            width: 200
+            font_size: 18
+            pos_hint: {"center_x": 0.5}
+
+        MDTextFieldRound:
+            id: signup_password
+            hint_text: "Password"
+            icon_right: "eye-off"
+            size_hint_x: None
+            width: 200
+            font_size: 18
+            pos_hint: {"center_x": 0.5}
+            password: True
+
+        MDRoundFlatButton:
+            text: "SIGN UP"
+            font_size: 12
+            pos_hint: {"center_x": 0.5}
+            on_press: root.register()
+
+        MDRoundFlatButton:
+            text: "BACK TO LOG IN"
+            font_size: 12
+            pos_hint: {"center_x": 0.5}
+            on_press: root.go_to_LoginApp()
+
+        #MDRoundFlatButton:
+            #text: "CLEAR"
+            #font_size: 12
+            #pos_hint: {"center_x": 0.5}
+            #on_press: app.clear()
+
+        Widget:
+            size_hint_y: None
+            height: 10
+
+<MenuPage>:
+    MDCard:
+        size_hint: None, None
+        size: 900, 600
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: 25
+        spacing: 25
+        orientation: 'vertical'
+
+        MDRoundFlatButton:
+            text: "ENTER NEW SPENDINGS"
+            font_size: 26
+            pos_hint: {-3.5:"center_y"}
+            on_press: root.go_to_SpendingEntry()
+
+        MDRoundFlatButton:
+            text: "ENTER NEW INCOME"
+            font_size: 26
+            pos_hint: {-3.5:"center_y"}
+            on_press: root.go_to_IncomeEntry()
+
+<SpendingEntry>:
+    MDCard:
+        size_hint: None, None
+        size: 900, 600
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: 25
+        spacing: 25
+        orientation: 'vertical'
+
+        MDRoundFlatButton:
+            text: "BACK TO MENU"
+            font_size: 12
+            pos_hint: {-3.5: "center_y"}
+            on_press: root.go_to_MenuPage()
+
+<IncomeEntry>:
+    MDCard:
+        size_hint: None, None
+        size: 900, 600
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: 25
+        spacing: 25
+        orientation: 'vertical'
+
+        MDRoundFlatButton:
+            text: "BACK TO MENU"
+            font_size: 12
+            pos_hint: {-3.5: "center_y"}
+            on_press: root.go_to_MenuPage()
+```
